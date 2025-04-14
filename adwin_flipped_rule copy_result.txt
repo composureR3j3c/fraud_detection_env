@@ -1,0 +1,35 @@
+PS E:\proj\fraud_detection_env> python.exe .\adwin_flipped_rule.py
+📍 Applied SMOTE with k=5 | Fraud Samples: 85
+✅ Flipped ALL labels in chunks 20–29
+
+🔍 Predictions with adaptive rule switching:
+
+⚠️ Drift detected at row 42023 | Estimation Error: 0.6250
+✅ Drift stabilized at row 42024. Returning to model.
+⚠️ Drift detected at row 44015 | Estimation Error: 0.1429
+✅ Drift stabilized at row 44015. Returning to model.
+⚠️ Drift detected at row 46039 | Estimation Error: 0.3750
+✅ Drift stabilized at row 46040. Returning to model.
+⚠️ Drift detected at row 48031 | Estimation Error: 0.5714
+⚠️ Drift detected at row 50023 | Estimation Error: 0.6250
+✅ Drift stabilized at row 50024. Returning to model.
+⚠️ Drift detected at row 52015 | Estimation Error: 0.1429
+✅ Drift stabilized at row 52015. Returning to model.
+⚠️ Drift detected at row 54039 | Estimation Error: 0.3750
+✅ Drift stabilized at row 54040. Returning to model.
+⚠️ Drift detected at row 56031 | Estimation Error: 0.5714
+⚠️ Drift detected at row 58023 | Estimation Error: 0.6250
+✅ Drift stabilized at row 58024. Returning to model.
+
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+           0     0.5003    0.9998    0.6669      4995
+           1     0.9444    0.0034    0.0068      5005
+
+    accuracy                         0.5011     10000
+   macro avg     0.7224    0.5016    0.3368     10000
+weighted avg     0.7226    0.5011    0.3365     10000
+
+📍 Drift points detected at rows: [42023, 44015, 46039, 48031, 50023, 52015, 54039, 56031, 58023]
