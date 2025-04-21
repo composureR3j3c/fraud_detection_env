@@ -1,0 +1,87 @@
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+           0     0.9987    0.9998    0.9993     29931
+           1     0.8611    0.4493    0.5905        69
+
+    accuracy                         0.9986     30000
+   macro avg     0.9299    0.7246    0.7949     30000
+weighted avg     0.9984    0.9986    0.9983     30000
+
+📍 Drift points detected at rows: [30314, 30315, 30389, 30442, 34555, 35053, 35054, 39042, 39375, 39376, 39769, 39770, 40693, 40694, 40850, 40851, 41569, 41940, 41941, 42299, 42300, 42473, 42474, 42529, 42530, 42549, 42550, 42589, 42590, 42607, 42608, 42633, 42634, 42674, 42675, 42694, 42695, 42697, 42698, 42741, 42742, 42756, 42757, 42768, 42783, 42784, 42854, 42855, 42887, 42888, 42907, 42908, 42934, 42935, 42945, 42946, 42959, 42960, 43060, 43061, 43160, 43161, 43204, 43205, 43419, 43420, 43426, 43427, 43435, 43436, 43680, 43681, 43841, 43842, 44220, 44221, 44253, 44254, 44270, 44271, 44478, 44479, 45044, 45045, 45489, 45490, 46841, 50288, 50289, 50961, 50962, 54019, 54020, 58152, 58464, 58465, 58501, 58502, 58811, 58812, 59097, 59098, 59758]
+🔁 Rule-based mode used: 103 times
+🧠 Model-based mode used: 29897 times
+✅ Overall accuracy: 0.9986
+
+⏱ Avg Inference Latency: 0.000002 seconds
+⏱ Max Inference Latency: 0.000446 seconds
+⏱ Min Inference Latency: 0.000000 seconds
+
+
+That’s a solid result! Here's what stands out from your final evaluation:
+
+📊 Performance Summary:
+
+Accuracy: 99.86%
+
+Fraud class (1) detection:
+
+Precision: 86.1% → When it predicted fraud, it was correct most of the time.
+
+Recall: 44.9% → It missed more than half of the actual frauds.
+
+F1-score: 59.05% → Reflects the trade-off between precision and recall.
+
+Normal class (0) was predicted extremely accurately (almost 100%).
+
+📈 Drift Detection:
+
+Drift points detected: 100+ across the 30,000 streamed samples
+
+Rule-based mode triggered: 103 times
+
+Most drift detections seem to cluster tightly in the later chunks → suggesting the simulation or feature shift in those areas was effective.
+
+The rule-based fallback seems to be working selectively and sparingly.
+
+🔍 Observations & Suggestions:
+
+Concept Drift Sensitivity:
+
+The dual detection method (ADWIN + feature-based) is performing better, though you may still want to fine-tune the feature_threshold or ADWIN’s delta to reduce over-triggering in low-impact cases.
+
+Recall Challenge for Class 1:
+
+44.9% recall on frauds is an improvement but still suggests the model is cautious.
+
+Possible improvements:
+
+Use cost-sensitive training to penalize fraud misclassifications more.
+
+Try a streaming ensemble or an online learner like Hoeffding Tree if you revisit dynamic retraining.
+
+Rule Triggering:
+
+103 rule-based predictions (out of 30,000) is modest, which is good. But you can log how many of those were correct to evaluate its utility more explicitly.
+
+Latency:
+
+If you’re still tracking average and max inference latency, how did those look? Consistent low latency is a huge win in stream processing setups.
+
+Would you like help:
+
+Fine-tuning the drift thresholds or fallback logic?
+
+Improving fraud recall further?
+
+Adding logs to analyze rule-based prediction performance in detail?
+
+Happy to help push it forward!
+
+
+
+
+
+
+

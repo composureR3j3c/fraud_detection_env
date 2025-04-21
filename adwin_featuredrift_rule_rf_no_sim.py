@@ -41,19 +41,6 @@ model.fit(X_res_scaled, y_res)
 feature_means = X_res.mean()
 feature_threshold = 2.5
 
-# Simulate concept drift
-for i in range(20, 30):
-    start = i * chunk_size
-    end = (i + 1) * chunk_size
-    df.loc[start:end-1, "V14"] *= -2
-    df.loc[start:end-1, "V3"] += 10
-    df.loc[start:end-1, "V10"] -= 5
-    df.loc[start:end-1, "V4"] *= 3
-    df.loc[start:end-1, "V12"] = df.loc[start:end-1, "V12"].apply(lambda x: x**2 if x > 0 else x)
-    df.loc[start:end-1, "V17"] += 8
-
-print("🔀 Simulated concept drift on V14, V3, V10, V4, V12, V17")
-
 adwin = ADWIN(delta=0.0005)
 rolling_window = [] 
 prev_row_vals = None

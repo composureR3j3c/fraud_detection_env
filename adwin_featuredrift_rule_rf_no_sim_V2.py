@@ -41,19 +41,6 @@ model.fit(X_res_scaled, y_res)
 feature_means = X_res.mean()
 feature_threshold = 2.5
 
-# Simulate concept drift
-for i in range(20, 30):
-    start = i * chunk_size
-    end = (i + 1) * chunk_size
-    df.loc[start:end-1, "V14"] *= -2
-    df.loc[start:end-1, "V3"] += 10
-    df.loc[start:end-1, "V10"] -= 5
-    df.loc[start:end-1, "V4"] *= 3
-    df.loc[start:end-1, "V12"] = df.loc[start:end-1, "V12"].apply(lambda x: x**2 if x > 0 else x)
-    df.loc[start:end-1, "V17"] += 8
-
-print("🔀 Simulated concept drift on V14, V3, V10, V4, V12, V17")
-
 adwin = ADWIN(delta=0.0005)
 rolling_window = [] 
 prev_row_vals = None
@@ -66,7 +53,9 @@ rule_mode_count = 0
 model_mode_count = 0
 
 print("\n🚀 Starting Stream Prediction...\n")
-
+cooldown_period = 500 # Number of rows between accepted drifts 
+        
+last_drift_row = -cooldown_period # Initialize before your main loop
 for i in range(train_chunks, train_chunks + predict_chunks):
     X_chunk = X.iloc[i*chunk_size:(i+1)*chunk_size]
     y_chunk = y.iloc[i*chunk_size:(i+1)*chunk_size]
@@ -98,23 +87,20 @@ for i in range(train_chunks, train_chunks + predict_chunks):
 
         # Start timer
         start_time = time.time()
-
-        if adwin.drift_detected or feature_drift:
-            print(f"\n⚠️ Drift detected at row {idx} | Switching to rule-based mode.")
-            drift_points.append(idx)
-            rule_mode_count += 1
-            amount = row["Amount"]
-            v14 = row["V14"]
-            v17 = row["V17"]
-            rule_pred = 1 if (amount > 10000 or v14 < -50 or v17 > 20) else 0
-            y_pred_all.append(rule_pred)
-        else:
-            model_mode_count += 1
+        
+        if (adwin.drift_detected or feature_drift) and (idx - last_drift_row >= cooldown_period): 
+            print(f"\n⚠️ Drift detected at row {idx} | Switching to rule-based mode.") 
+            drift_points.append(idx) 
+            last_drift_row = idx # Update the last drift trigger point 
+            rule_mode_count += 1 
+            amount = row["Amount"] 
+            v14 = row["V14"] 
+            v17 = row["V17"] 
+            rule_pred = 1 if (amount > 10000 or v14 < -50 or v17 > 20) else 0 
+            y_pred_all.append(rule_pred) 
+        else: 
+            model_mode_count += 1 
             y_pred_all.append(y_pred)
-
-        latency = time.time() - start_time
-        latencies.append(latency)
-        y_true_all.append(true_label)
 
 print("\n📊 Final Evaluation:\n")
 print(classification_report(y_true_all, y_pred_all, digits=4))
