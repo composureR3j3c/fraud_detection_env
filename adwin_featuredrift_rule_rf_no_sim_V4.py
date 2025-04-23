@@ -1,19 +1,17 @@
-# rule based on feature importance
 import pandas as pd
 import numpy as np
 import time
-import datetime
+import threading
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from imblearn.over_sampling import SMOTE
 from river.drift import ADWIN
 
-# Load and sort data
-print(f"start time={datetime.datetime.now()}")
-df = pd.read_csv("creditcard.csv")
-df = df.sort_values(by="Time").reset_index(drop=True)
-
+# Load and prepare data
+df = pd.read_csv("creditcard.csv").sort_values(by="Time").reset_index(drop=True)
 X = df.drop("Class", axis=1)
 y = df["Class"]
 
@@ -25,14 +23,8 @@ X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 
 fraud_count = sum(y_train == 1)
-if fraud_count >= 2:
-    k = min(5, fraud_count - 1)
-    sm = SMOTE(k_neighbors=k, random_state=42)
-    X_res, y_res = sm.fit_resample(X_train, y_train)
-    print(f"✅ SMOTE applied (k={k}) | Fraud count = {fraud_count}")
-else:
-    X_res, y_res = X_train, y_train
-    print("⚠️ Not enough frauds for SMOTE")
+k = min(5, fraud_count - 1) if fraud_count >= 2 else 1
+X_res, y_res = SMOTE(k_neighbors=k, random_state=42).fit_resample(X_train, y_train)
 
 scaler = StandardScaler()
 X_res_scaled = pd.DataFrame(scaler.fit_transform(X_res), columns=X.columns)
@@ -40,27 +32,75 @@ X_res_scaled = pd.DataFrame(scaler.fit_transform(X_res), columns=X.columns)
 model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight="balanced")
 model.fit(X_res_scaled, y_res)
 
-# Feature drift tracking
-feature_means = X_res.mean()
-feature_threshold = 2.5
-
+# Drift and Rule Tracking
 adwin = ADWIN(delta=0.0005)
-rolling_window = [] 
+rolling_window = []
 prev_row_vals = None
+top_features = ['V14', 'V3', 'V10', 'V4', 'V12', 'V17']
+feature_means = X_res.mean()
 
+# Prediction stats
 latencies = []
 drift_points = []
-y_true_all = []
-y_pred_all = []
-y_true_rule = []
-y_pred_rule = []
-rule_mode_count = 0
-model_mode_count = 0
+y_true_all, y_pred_all = [], []
+y_true_rule, y_pred_rule = [], []
+y_true_model, y_pred_model = [], []
 
+cooldown_period = 500
+last_drift_row = -cooldown_period
+retraining_thread = None
+in_rule_mode = False
+retraining_complete = True
+retrain_lock = threading.Lock()
+
+
+def retrain_model(recent_X, recent_y):
+    global model, scaler, in_rule_mode, retraining_complete
+    try:
+        fraud_count = sum(recent_y == 1)
+        if fraud_count >= 6:
+            k_local = min(5, fraud_count - 1)
+            X_res, y_res = SMOTE(k_neighbors=k_local, random_state=42).fit_resample(recent_X, recent_y)
+        else:
+            print(f"⚠️ Not enough fraud cases for SMOTE during retraining (found {fraud_count}). Skipping SMOTE.")
+            X_res, y_res = recent_X, recent_y
+
+        new_scaler = StandardScaler()
+        # X_scaled = new_scaler.fit_transform(X_res)
+        X_scaled = pd.DataFrame(new_scaler.fit_transform(X_res), columns=X_res.columns)
+
+
+        new_model = LogisticRegression(max_iter=200, solver="lbfgs", class_weight="balanced", random_state=42)
+        new_model.fit(X_scaled, y_res)
+
+        with retrain_lock:
+            model = new_model
+            scaler = new_scaler
+            retraining_complete = True
+            in_rule_mode = False
+        print("✅ Retraining complete. Switched back to model-based.")
+    except Exception as e:
+        print("❌ Retraining failed:", e)
+
+
+# Automatic rule generation using Decision Tree
+def generate_rules(X_recent, y_recent):
+    dt = DecisionTreeClassifier(max_depth=2)
+    dt.fit(X_recent[top_features], y_recent)
+    rules = []
+    for i, t in enumerate(dt.tree_.feature):
+        if t != -2:
+            threshold = dt.tree_.threshold[i]
+            fname = top_features[t]
+            rules.append((fname, threshold))
+    return rules
+
+# Begin Streaming
 print("\n🚀 Starting Stream Prediction...\n")
-cooldown_period = 500 # Number of rows between accepted drifts 
-        
-last_drift_row = -cooldown_period # Initialize before your main loop
+
+buffer_X, buffer_y = [], []
+rules = [(f, 0) for f in top_features]  # Default fallbacks
+
 for i in range(train_chunks, train_chunks + predict_chunks):
     X_chunk = X.iloc[i*chunk_size:(i+1)*chunk_size]
     y_chunk = y.iloc[i*chunk_size:(i+1)*chunk_size]
@@ -70,16 +110,14 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         row_scaled = pd.DataFrame(scaler.transform(row_df), columns=X.columns)
         true_label = y_chunk.loc[idx]
 
+        start_time = time.time()
+
         y_pred_prob = model.predict_proba(row_scaled)[0][1]
         y_pred = int(y_pred_prob > 0.5)
         error = int(y_pred != true_label)
-        drift = adwin.update(error)
+        adwin.update(error)
 
-         # Feature drift
-        importances = pd.Series(model.feature_importances_, index=X.columns) 
-        top_features = importances.sort_values(ascending=False).head(5) 
-        print(top_features)
-        # top_features = ['V14', 'V3', 'V10', 'V4', 'V12', 'V17']
+        # Feature drift
         current_vals = row_scaled[top_features].values[0]
         feature_drift = False
         if prev_row_vals is not None:
@@ -93,46 +131,56 @@ for i in range(train_chunks, train_chunks + predict_chunks):
             rolling_window.append(np.zeros_like(current_vals))
         prev_row_vals = current_vals
 
-        # Start timer
-        start_time = time.time()
-        
-        if (adwin.drift_detected or feature_drift) and (idx - last_drift_row >= cooldown_period): 
-            print(f"\n⚠️ Drift detected at row {idx} | Switching to rule-based mode.") 
-            drift_points.append(idx) 
-            last_drift_row = idx # Update the last drift trigger point 
-            rule_mode_count += 1 
-            amount = row["Amount"] 
-            v14 = row["V14"] 
-            v17 = row["V17"] 
-            rule_pred = 1 if (amount > 10000 or v14 < -50 or v17 > 20) else 0 
-            y_pred_rule.append(rule_pred) 
-            y_true_rule.append(true_label) 
-        else: 
-            model_mode_count += 1 
+        # Handle drift detection
+        if (adwin.drift_detected or feature_drift) and (idx - last_drift_row > cooldown_period):
+            print(f"\n⚠️ Drift detected at row {idx} | Switching to rule-based mode.")
+            drift_points.append(idx)
+            last_drift_row = idx
+            in_rule_mode = True
+            retraining_complete = False
+
+            # Collect recent window
+            recent_df = pd.DataFrame(buffer_X[-300:])  # last 300
+            recent_y = pd.Series(buffer_y[-300:])
+            rules = generate_rules(recent_df, recent_y)
+            retraining_thread = threading.Thread(target=retrain_model, args=(recent_df, recent_y))
+            retraining_thread.start()
+
+        if in_rule_mode and not retraining_complete:
+            # Rule-based prediction
+            pred = 0
+            for feat, thresh in rules:
+                if row[feat] > thresh:
+                    pred = 1
+                    break
+            y_pred_all.append(pred)
+            y_true_all.append(true_label)
+            y_pred_rule.append(pred)
+            y_true_rule.append(true_label)
+        else:
             y_pred_all.append(y_pred)
             y_true_all.append(true_label)
+            y_pred_model.append(y_pred)
+            y_true_model.append(true_label)
 
-        latency = time.time() - start_time
-        latencies.append(latency)
+        buffer_X.append(row)
+        buffer_y.append(true_label)
+        latencies.append(time.time() - start_time)
 
-# Final Evaluation for Model-Based Predictions
-print("\n🧠 Model-based Predictions Report:\n")
+# Reports
+print("\n📊 Final Evaluation:\n")
 print(classification_report(y_true_all, y_pred_all, digits=4))
+print(f"📍 Drift points detected: {drift_points}")
+print(f"🔁 Rule-based used: {len(y_pred_rule)}")
+print(f"🤖 Model-based used: {len(y_pred_model)}")
+print(f"✅ Accuracy: {np.mean(np.array(y_true_all)==np.array(y_pred_all)):.4f}")
+print(f"⏱ Avg latency: {np.mean(latencies):.6f} sec")
 
-# Final Evaluation for Rule-Based Predictions
-print("\n🔁 Rule-based Predictions Report:\n")
-print(classification_report(y_true_rule, y_pred_rule, digits=4))
+print("\n🧾 Rule-based Report:")
+if y_pred_rule:
+    print(classification_report(y_true_rule, y_pred_rule, digits=4))
+else:
+    print("No rule-based predictions were made.")
 
-# Overall Performance Evaluation
-print("\n📊 Final Overall Evaluation:\n")
-print(f"📍 Drift points detected at rows: {drift_points}")
-print(f"🔁 Rule-based mode used: {rule_mode_count} times")
-print(f"🧠 Model-based mode used: {model_mode_count} times")
-print(f"✅ Overall accuracy: {np.mean(np.array(y_true_all) == np.array(y_pred_all)):.4f}")
-
-# Latency Statistics
-print(f"\n⏱ Avg Inference Latency: {np.mean(latencies):.6f} seconds")
-print(f"⏱ Max Inference Latency: {np.max(latencies):.6f} seconds")
-print(f"⏱ Min Inference Latency: {np.min(latencies):.6f} seconds")
-print(f"Finish time={datetime.datetime.now()}")
-
+print("\n🤖 Model-based Report:")
+print(classification_report(y_true_model, y_pred_model, digits=4))

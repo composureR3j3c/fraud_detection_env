@@ -1,0 +1,97 @@
+PS E:\proj\fraud_detection_env> python.exe .\adwin_featuredrift_rule_rf_no_sim_V4.py
+start time=2025-04-23 14:51:03.735766
+✅ SMOTE applied (k=5) | Fraud count = 94
+
+🚀 Starting Stream Prediction...
+
+
+⚠️ Drift detected at row 30314 | Switching to rule-based mode.
+🛠️  New rule added: If V17 < 14.57, mark as fraud
+
+⚠️ Drift detected at row 34555 | Switching to rule-based mode.
+🛠️  New rule added: If V10 < 0.36, mark as fraud
+
+⚠️ Drift detected at row 39042 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 39769 | Switching to rule-based mode.
+🛠️  New rule added: If V4 > 16.49, mark as fraud
+
+⚠️ Drift detected at row 40693 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 41569 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 42299 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 42854 | Switching to rule-based mode.
+🛠️  New rule added: If V12 < 12.16, mark as fraud
+
+⚠️ Drift detected at row 43419 | Switching to rule-based mode.
+🛠️  New rule added: If V3 < 31.81, mark as fraud
+
+⚠️ Drift detected at row 44220 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 45044 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 46841 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 50288 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 50961 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 54019 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 58152 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 58811 | Switching to rule-based mode.
+
+⚠️ Drift detected at row 59758 | Switching to rule-based mode.
+
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+           0     0.9996    0.9994    0.9995     29931
+           1     0.7467    0.8116    0.7778        69
+
+    accuracy                         0.9989     30000
+   macro avg     0.8731    0.9055    0.8886     30000
+weighted avg     0.9990    0.9989    0.9990     30000
+
+📍 Drift points detected at rows: [30314, 34555, 39042, 39769, 40693, 41569, 42299, 42854, 43419, 44220, 45044, 46841, 50288, 50961, 54019, 58152, 58811, 59758]      
+🔁 Rule-based mode used: 18 times
+🧠 Model-based mode used: 29982 times
+✅ Overall accuracy: 0.9989
+
+⏱ Avg Inference Latency: 0.000002 seconds
+⏱ Max Inference Latency: 0.019141 seconds
+⏱ Min Inference Latency: 0.000001 seconds
+
+🧾 Rule-based Predictions Report:
+              precision    recall  f1-score   support
+
+           0     0.0000    0.0000    0.0000        15
+           1     0.1176    0.6667    0.2000         3
+
+    accuracy                         0.1111        18
+   macro avg     0.0588    0.3333    0.1000        18
+weighted avg     0.0196    0.1111    0.0333        18
+
+
+🤖 Model-based Predictions Report:
+              precision    recall  f1-score   support
+
+           0     0.9996    0.9999    0.9997     29916
+           1     0.9310    0.8182    0.8710        66
+
+    accuracy                         0.9995     29982
+   macro avg     0.9653    0.9090    0.9354     29982
+weighted avg     0.9994    0.9995    0.9994     29982
+
+Finish time=2025-04-23 14:54:54.990218
+
+
+
+
+
+
+with out retraining rule only
