@@ -1,0 +1,19 @@
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+           0     0.9995    0.9998    0.9996     29931
+           1     0.9000    0.7826    0.8372        69
+
+    accuracy                         0.9993     30000
+   macro avg     0.9497    0.8912    0.9184     30000
+weighted avg     0.9993    0.9993    0.9993     30000
+
+📍 Drift points detected at rows: [30314, 34555, 39042, 39769, 40693, 41569, 42299, 42854, 43419, 44220, 45044, 46841, 50288, 50961, 54019, 58152, 58811, 59758]      
+🔁 Rule-based mode used: 18 times
+🧠 Model-based mode used: 29982 times
+✅ Overall accuracy: 0.9993
+
+⏱ Avg Inference Latency: 0.000001 seconds
+⏱ Max Inference Latency: 0.000339 seconds
+⏱ Min Inference Latency: 0.000000 seconds

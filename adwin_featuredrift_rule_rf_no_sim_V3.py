@@ -1,4 +1,3 @@
-# cooldown period added
 import pandas as pd
 import numpy as np
 import time
@@ -50,6 +49,8 @@ latencies = []
 drift_points = []
 y_true_all = []
 y_pred_all = []
+y_true_rule = []
+y_pred_rule = []
 rule_mode_count = 0
 model_mode_count = 0
 
@@ -98,21 +99,33 @@ for i in range(train_chunks, train_chunks + predict_chunks):
             v14 = row["V14"] 
             v17 = row["V17"] 
             rule_pred = 1 if (amount > 10000 or v14 < -50 or v17 > 20) else 0 
-            y_pred_all.append(rule_pred) 
+            y_pred_rule.append(rule_pred) 
+            y_true_rule.append(true_label) 
         else: 
             model_mode_count += 1 
             y_pred_all.append(y_pred)
+            y_true_all.append(true_label)
 
         latency = time.time() - start_time
         latencies.append(latency)
-        y_true_all.append(true_label)
 
-print("\n📊 Final Evaluation:\n")
+# Final Evaluation for Model-Based Predictions
+print("\n🧠 Model-based Predictions Report:\n")
 print(classification_report(y_true_all, y_pred_all, digits=4))
+
+# Final Evaluation for Rule-Based Predictions
+print("\n🔁 Rule-based Predictions Report:\n")
+print(classification_report(y_true_rule, y_pred_rule, digits=4))
+
+# Overall Performance Evaluation
+print("\n📊 Final Overall Evaluation:\n")
 print(f"📍 Drift points detected at rows: {drift_points}")
 print(f"🔁 Rule-based mode used: {rule_mode_count} times")
 print(f"🧠 Model-based mode used: {model_mode_count} times")
 print(f"✅ Overall accuracy: {np.mean(np.array(y_true_all) == np.array(y_pred_all)):.4f}")
+
+# Latency Statistics
 print(f"\n⏱ Avg Inference Latency: {np.mean(latencies):.6f} seconds")
 print(f"⏱ Max Inference Latency: {np.max(latencies):.6f} seconds")
 print(f"⏱ Min Inference Latency: {np.min(latencies):.6f} seconds")
+
