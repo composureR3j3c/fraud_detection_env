@@ -1,0 +1,18 @@
+📍 Drift points detected: [30314, 34555, 39042, 39769, 40693, 41569, 42299, 42854, 43419, 44220, 45044, 46841, 50288, 50961, 54019, 58152, 58811, 59758]
+🔁 Rule-based used: 0
+🤖 Model-based used: 30000
+✅ Accuracy: 0.9994
+⏱ Avg latency: 0.005660 sec
+
+🧾 Rule-based Report:
+No rule-based predictions were made.
+
+🤖 Model-based Report:
+              precision    recall  f1-score   support
+
+           0     0.9996    0.9998    0.9997     29931
+           1     0.9194    0.8261    0.8702        69
+
+    accuracy                         0.9994     30000
+   macro avg     0.9595    0.9130    0.9350     30000
+weighted avg     0.9994    0.9994    0.9994     30000
