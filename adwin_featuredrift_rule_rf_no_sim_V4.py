@@ -1,4 +1,4 @@
-# sparated measures
+# rule based on feature importance
 import pandas as pd
 import numpy as np
 import time
@@ -76,7 +76,10 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         drift = adwin.update(error)
 
          # Feature drift
-        top_features = ['V14', 'V3', 'V10', 'V4', 'V12', 'V17']
+        importances = pd.Series(model.feature_importances_, index=X.columns) 
+        top_features = importances.sort_values(ascending=False).head(5) 
+        print(top_features)
+        # top_features = ['V14', 'V3', 'V10', 'V4', 'V12', 'V17']
         current_vals = row_scaled[top_features].values[0]
         feature_drift = False
         if prev_row_vals is not None:
