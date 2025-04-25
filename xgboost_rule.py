@@ -18,28 +18,17 @@ all_mined_rules = []
 
 
 # Function: Mine rules from misclassified instances
-from sklearn.tree import DecisionTreeClassifier, export_text
-
 def mine_rules_from_misclassified(X_recent, y_true, y_pred, feature_names, max_depth=2):
-    # Mask for misclassified instances (where true label and prediction differ)
     misclassified_mask = (y_true != y_pred)
-    
-    # Focus only on misclassified fraud instances (class 1)
-    fraud_misclassified_mask = (y_true == 1) & misclassified_mask
-    X_mis = X_recent[fraud_misclassified_mask]
-    y_mis = y_true[fraud_misclassified_mask]
+    X_mis = X_recent[misclassified_mask]
+    y_mis = y_true[misclassified_mask]
 
-    # If there are not enough misclassified fraud instances or none at all, return None
     if len(X_mis) < 10 or y_mis.sum() == 0:
         return None, None
 
-    # Train a decision tree classifier on misclassified fraud instances
     clf = DecisionTreeClassifier(max_depth=max_depth, class_weight="balanced", random_state=42)
     clf.fit(X_mis, y_mis)
-    
-    # Export the rules mined by the decision tree
     rules_text = export_text(clf, feature_names=feature_names.tolist())
-    
     return rules_text, clf
 
 print(f"start time={datetime.datetime.now()}")
