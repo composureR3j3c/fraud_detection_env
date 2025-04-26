@@ -70,82 +70,29 @@ retrain_lock = threading.Lock()
 in_rule_mode = False
 retraining_complete = True
 
-# 🚀 Fast Simple Rule Mining v1
-# def mine_simple_rules(X_recent, y_recent, top_features, quantile_threshold=0.95):
-#     rules = []
-#     fraud_samples = X_recent[y_recent == 1]
-#     if len(fraud_samples) < 5:
-#         print("⚠️ Not enough fraud samples for simple rule mining.")
-#         return rules
-#     for feature in top_features:
-#         high_thresh = fraud_samples[feature].quantile(quantile_threshold)
-#         low_thresh = fraud_samples[feature].quantile(1 - quantile_threshold)
-#         if fraud_samples[feature].mean() > X_recent[feature].mean():
-#             rules.append((feature, high_thresh, 'greater'))
-#         else:
-#             rules.append((feature, low_thresh, 'less'))
-#     return rules
-
-def mine_simple_rules(X_recent, y_recent, top_features, quantiles=[0.7, 0.8, 0.9], min_fraud=5):
+# 🚀 Fast Simple Rule Mining
+def mine_simple_rules(X_recent, y_recent, top_features, quantile_threshold=0.95):
     rules = []
     fraud_samples = X_recent[y_recent == 1]
-    if len(fraud_samples) < min_fraud:
-        print("⚠️ Not enough fraud samples for rule mining.")
+    if len(fraud_samples) < 5:
+        print("⚠️ Not enough fraud samples for simple rule mining.")
         return rules
-
     for feature in top_features:
-        feature_rules = []
-
-        # Try multiple thresholds for both greater and less directions
-        for direction in ['greater', 'less']:
-            best_rule = None
-            best_f1 = 0
-
-            for q in quantiles:
-                if direction == 'greater':
-                    threshold = fraud_samples[feature].quantile(q)
-                    preds = (X_recent[feature] > threshold).astype(int)
-                else:
-                    threshold = fraud_samples[feature].quantile(1 - q)
-                    preds = (X_recent[feature] < threshold).astype(int)
-
-                tp = ((preds == 1) & (y_recent == 1)).sum()
-                fp = ((preds == 1) & (y_recent == 0)).sum()
-                fn = ((preds == 0) & (y_recent == 1)).sum()
-
-                precision = tp / (tp + fp + 1e-8)
-                recall = tp / (tp + fn + 1e-8)
-                f1 = 2 * precision * recall / (precision + recall + 1e-8)
-
-                if f1 > best_f1 and precision >= 0.3 and recall >= 0.3:
-                    best_f1 = f1
-                    best_rule = (feature, threshold, direction)
-
-            if best_rule:
-                feature_rules.append(best_rule)
-
-        rules.extend(feature_rules)
-
-    print(f"🧠 {len(rules)} simple rules mined.")
+        high_thresh = fraud_samples[feature].quantile(quantile_threshold)
+        low_thresh = fraud_samples[feature].quantile(1 - quantile_threshold)
+        if fraud_samples[feature].mean() > X_recent[feature].mean():
+            rules.append((feature, high_thresh, 'greater'))
+        else:
+            rules.append((feature, low_thresh, 'less'))
     return rules
 
-def apply_simple_rules(row, rules, min_votes=1):
-    votes = 0
+def apply_simple_rules(row, rules):
     for feature, threshold, direction in rules:
         if direction == 'greater' and row[feature] > threshold:
-            votes += 1
+            return 1
         if direction == 'less' and row[feature] < threshold:
-            votes += 1
-    return int(votes >= min_votes)
-
-
-# def apply_simple_rules(row, rules):
-#     for feature, threshold, direction in rules:
-#         if direction == 'greater' and row[feature] > threshold:
-#             return 1
-#         if direction == 'less' and row[feature] < threshold:
-#             return 1
-#     return 0
+            return 1
+    return 0
 
 # 🚀 Model Retraining Function
 def retrain_model(X_recent, y_recent):
