@@ -31,6 +31,7 @@ def mine_rules_from_misclassified(X_recent, y_true, y_pred, feature_names, max_d
     rules_text = export_text(clf, feature_names=feature_names.tolist())
     return rules_text, clf
 
+
 print(f"start time={datetime.datetime.now()}")
 # Load data
 df = pd.read_csv("creditcard.csv")
@@ -182,14 +183,10 @@ for i in range(train_chunks, train_chunks + predict_chunks):
             if rule_model:
                 rule_pred = rule_model.predict(row_df)[0]
             else:
-                # Fallback to the continuously updated mined rules
-                rule_pred = 0
-                for rule in all_mined_rules:
-                    # Check if any rule applies
-                    if rule.predict(row_df) == 1:
-                        rule_pred = 1
-                        break
-
+                amount = row["Amount"]
+                v14 = row["V14"]
+                v17 = row["V17"]
+                rule_pred = 1 if (amount > 10000 or v14 < -50 or v17 > 20) else 0
             y_pred_all.append(rule_pred)
             y_true_all.append(true_label)
             y_true_rule.append(true_label)
@@ -205,19 +202,6 @@ for i in range(train_chunks, train_chunks + predict_chunks):
 
         latency = time.time() - start_time
         latencies.append(latency)
-
-    # Rule mining from misclassified samples during drift or retraining
-    if in_rule_mode and retraining_complete:
-        # Apply rule mining on misclassified samples
-        rules_text, rule_clf = mine_rules_from_misclassified(
-            pd.DataFrame(buffer_X, columns=feature_names),
-            buffer_y,
-            y_pred_all[-len(buffer_X):],  # Predictions on buffer data
-            feature_names
-        )
-        if rules_text:
-            print(f"🧠 New rules mined:\n{rules_text}")
-            all_mined_rules.append(rule_clf)  # Add the mined model to the rule set
 
 # Results
 print("\n📊 Final Evaluation:\n")
