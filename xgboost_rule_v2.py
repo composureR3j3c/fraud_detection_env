@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 from imblearn.over_sampling import SMOTE
 from river.drift import ADWIN
+from itertools import combinations
 import warnings
 
 warnings.filterwarnings("ignore", message=".*fitted without feature names.*")
@@ -66,69 +67,83 @@ y_pred_model = []
 buffer_X = []
 buffer_y = []
 mined_simple_rules = []
+mined_combo_rules = []
 retrain_lock = threading.Lock()
 in_rule_mode = False
 retraining_complete = True
 
-# 🚀 Fast Simple Rule Mining v1
-# def mine_simple_rules(X_recent, y_recent, top_features, quantile_threshold=0.95):
-#     rules = []
-#     fraud_samples = X_recent[y_recent == 1]
-#     if len(fraud_samples) < 5:
-#         print("⚠️ Not enough fraud samples for simple rule mining.")
-#         return rules
-#     for feature in top_features:
-#         high_thresh = fraud_samples[feature].quantile(quantile_threshold)
-#         low_thresh = fraud_samples[feature].quantile(1 - quantile_threshold)
-#         if fraud_samples[feature].mean() > X_recent[feature].mean():
-#             rules.append((feature, high_thresh, 'greater'))
-#         else:
-#             rules.append((feature, low_thresh, 'less'))
-#     return rules
-
-def mine_simple_rules(X_recent, y_recent, top_features, quantiles=[0.7, 0.8, 0.9], min_fraud=5):
+# 🚀 Rule Mining Functions
+def mine_simple_rules(X_recent, y_recent, top_features, quantile_threshold=0.99, min_fraud=5):
     rules = []
     fraud_samples = X_recent[y_recent == 1]
     if len(fraud_samples) < min_fraud:
-        print("⚠️ Not enough fraud samples for rule mining.")
+        print("⚠️ Not enough fraud samples for simple rule mining.")
         return rules
 
     for feature in top_features:
-        feature_rules = []
+        fraud_mean = fraud_samples[feature].mean()
+        overall_mean = X_recent[feature].mean()
 
-        # Try multiple thresholds for both greater and less directions
-        for direction in ['greater', 'less']:
-            best_rule = None
-            best_f1 = 0
-
-            for q in quantiles:
-                if direction == 'greater':
-                    threshold = fraud_samples[feature].quantile(q)
-                    preds = (X_recent[feature] > threshold).astype(int)
-                else:
-                    threshold = fraud_samples[feature].quantile(1 - q)
-                    preds = (X_recent[feature] < threshold).astype(int)
-
-                tp = ((preds == 1) & (y_recent == 1)).sum()
-                fp = ((preds == 1) & (y_recent == 0)).sum()
-                fn = ((preds == 0) & (y_recent == 1)).sum()
-
-                precision = tp / (tp + fp + 1e-8)
-                recall = tp / (tp + fn + 1e-8)
-                f1 = 2 * precision * recall / (precision + recall + 1e-8)
-
-                if f1 > best_f1 and precision >= 0.3 and recall >= 0.3:
-                    best_f1 = f1
-                    best_rule = (feature, threshold, direction)
-
-            if best_rule:
-                feature_rules.append(best_rule)
-
-        rules.extend(feature_rules)
+        if fraud_mean > overall_mean:
+            threshold = X_recent[feature].quantile(quantile_threshold)
+            rules.append((feature, threshold, 'greater'))
+        else:
+            threshold = X_recent[feature].quantile(1 - quantile_threshold)
+            rules.append((feature, threshold, 'less'))
 
     print(f"🧠 {len(rules)} simple rules mined.")
     return rules
 
+def mine_combo_rules(X_recent, y_recent, top_features, quantiles=[0.85], min_fraud=5):
+    rules = []
+    fraud_samples = X_recent[y_recent == 1]
+    if len(fraud_samples) < min_fraud:
+        print("⚠️ Not enough fraud samples for combo rule mining.")
+        return rules
+
+    feature_pairs = list(combinations(top_features, 2))
+    for feat1, feat2 in feature_pairs:
+        best_rule = None
+        best_f1 = 0
+
+        for dir1 in ['greater', 'less']:
+            for dir2 in ['greater', 'less']:
+                for q1 in quantiles:
+                    for q2 in quantiles:
+                        if dir1 == 'greater':
+                            thresh1 = fraud_samples[feat1].quantile(q1)
+                            cond1 = X_recent[feat1] > thresh1
+                        else:
+                            thresh1 = fraud_samples[feat1].quantile(1 - q1)
+                            cond1 = X_recent[feat1] < thresh1
+
+                        if dir2 == 'greater':
+                            thresh2 = fraud_samples[feat2].quantile(q2)
+                            cond2 = X_recent[feat2] > thresh2
+                        else:
+                            thresh2 = fraud_samples[feat2].quantile(1 - q2)
+                            cond2 = X_recent[feat2] < thresh2
+
+                        preds = (cond1 & cond2).astype(int)
+                        tp = ((preds == 1) & (y_recent == 1)).sum()
+                        fp = ((preds == 1) & (y_recent == 0)).sum()
+                        fn = ((preds == 0) & (y_recent == 1)).sum()
+
+                        precision = tp / (tp + fp + 1e-8)
+                        recall = tp / (tp + fn + 1e-8)
+                        f1 = 2 * precision * recall / (precision + recall + 1e-8)
+
+                        if f1 > best_f1 and precision >= 0.3 and recall >= 0.3:
+                            best_f1 = f1
+                            best_rule = (feat1, thresh1, dir1, feat2, thresh2, dir2)
+
+        if best_rule:
+            rules.append(best_rule)
+
+    print(f"🧠 {len(rules)} combo rules mined.")
+    return rules
+
+# 🚀 Rule Application Functions
 def apply_simple_rules(row, rules, min_votes=1):
     votes = 0
     for feature, threshold, direction in rules:
@@ -136,20 +151,26 @@ def apply_simple_rules(row, rules, min_votes=1):
             votes += 1
         if direction == 'less' and row[feature] < threshold:
             votes += 1
-    return int(votes >= min_votes)
+    return votes
 
+def apply_combo_rules(row, rules, min_votes=1):
+    votes = 0
+    for feat1, thresh1, dir1, feat2, thresh2, dir2 in rules:
+        cond1 = row[feat1] > thresh1 if dir1 == 'greater' else row[feat1] < thresh1
+        cond2 = row[feat2] > thresh2 if dir2 == 'greater' else row[feat2] < thresh2
+        if cond1 and cond2:
+            votes += 1
+    return votes
 
-# def apply_simple_rules(row, rules):
-#     for feature, threshold, direction in rules:
-#         if direction == 'greater' and row[feature] > threshold:
-#             return 1
-#         if direction == 'less' and row[feature] < threshold:
-#             return 1
-#     return 0
+def apply_all_rules(row, simple_rules, combo_rules, min_votes=1):
+    simple_votes = apply_simple_rules(row, simple_rules)
+    combo_votes = apply_combo_rules(row, combo_rules)
+    total_votes = simple_votes + combo_votes
+    return int(total_votes >= min_votes)
 
 # 🚀 Model Retraining Function
 def retrain_model(X_recent, y_recent):
-    global model, scaler, retraining_complete, in_rule_mode, mined_simple_rules
+    global model, scaler, retraining_complete, in_rule_mode, mined_simple_rules, mined_combo_rules
     try:
         fraud_count = sum(y_recent == 1)
         if fraud_count < 2:
@@ -169,12 +190,13 @@ def retrain_model(X_recent, y_recent):
             model = new_model
             scaler = new_scaler
             mined_simple_rules = mine_simple_rules(pd.DataFrame(X_resampled, columns=X.columns), y_resampled, top_features)
+            mined_combo_rules = mine_combo_rules(pd.DataFrame(X_resampled, columns=X.columns), y_resampled, top_features)
             retraining_complete = True
             in_rule_mode = False
 
         print("✅ Retraining complete. Switched back to model-based mode.")
-        if mined_simple_rules:
-            print("🧠 New simple rules mined.")
+        if mined_simple_rules or mined_combo_rules:
+            print("🧠 New rules mined.")
 
     except Exception as e:
         print("❌ Retraining failed:", e)
@@ -221,7 +243,7 @@ for i in range(train_chunks, train_chunks + predict_chunks):
             threading.Thread(target=retrain_model, args=(buffer_df, buffer_y_series)).start()
 
         if in_rule_mode:
-            rule_pred = apply_simple_rules(row, mined_simple_rules) if mined_simple_rules else 0
+            rule_pred = apply_all_rules(row, mined_simple_rules, mined_combo_rules)
             y_pred_all.append(rule_pred)
             y_true_all.append(true_label)
             y_true_rule.append(true_label)
