@@ -180,3 +180,45 @@ weighted avg     0.9984    0.9982    0.9983      9241
 weighted avg     0.9993    0.9993    0.9993     20759
 
 End time=2025-04-29 15:50:03.630152
+
+
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9994    0.9998    0.9996     49898
+       Fraud     0.8706    0.7255    0.7914       102
+
+    accuracy                         0.9992     50000
+   macro avg     0.9350    0.8626    0.8955     50000
+weighted avg     0.9992    0.9992    0.9992     50000
+
+📍 Drift points detected at rows: [39375, 42549, 43060, 44270, 54019, 63636, 76609]
+✅ Overall accuracy: 0.9992
+
+⏱ Avg Inference Latency: 0.002442 seconds
+⏱ Max Inference Latency: 0.394694 seconds
+⏱ Min Inference Latency: 0.002119 seconds
+
+🧾 Rule-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     1.0000    0.9982    0.9991      2218
+       Fraud     0.8182    1.0000    0.9000        18
+
+    accuracy                         0.9982      2236
+   macro avg     0.9091    0.9991    0.9495      2236
+weighted avg     0.9985    0.9982    0.9983      2236
+
+
+🤖 Model-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9994    0.9999    0.9996     47680
+       Fraud     0.8889    0.6667    0.7619        84
+
+    accuracy                         0.9993     47764
+   macro avg     0.9442    0.8333    0.8808     47764
+weighted avg     0.9992    0.9993    0.9992     47764
+
+End time=2025-04-30 08:41:19.876086
