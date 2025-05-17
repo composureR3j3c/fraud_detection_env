@@ -23,7 +23,7 @@ y = df["Class"]
 
 chunk_size = 1000
 train_chunks = 30
-predict_chunks = 30
+predict_chunks = 255
 X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 
