@@ -178,7 +178,7 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         latencies.append(latency)
 
 # Results
-print("\ Final Evaluation:\n")
+print("\n Final Evaluation:\n")
 print(classification_report(y_true_all, y_pred_all, digits=4, target_names=["Non-Fraud", "Fraud"]))
 
 print(f" Drift points detected at rows: {drift_points}")

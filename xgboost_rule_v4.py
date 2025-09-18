@@ -23,9 +23,16 @@ y = df["Class"]
 
 chunk_size = 1000
 train_chunks = 30
-predict_chunks = 255
+val_chunks = 10   
+# predict_chunks = 50
+predict_chunks = 245
 X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
+
+# --- Validation Set (optional) ---
+X_val = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks, train_chunks + val_chunks)])
+y_val = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks, train_chunks + val_chunks)])
+
 
 # 🚀 SMOTE Resampling
 fraud_count = sum(y_train == 1)
@@ -40,8 +47,92 @@ else:
 # 🚀 Model and Scaler Training
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
-model = XGBClassifier(scale_pos_weight=fraud_count / (len(y_train) - fraud_count), random_state=42)
+model = XGBClassifier(
+    scale_pos_weight=(len(y_train) - fraud_count) / fraud_count, 
+    random_state=42)
 model.fit(X_res_scaled, y_res)
+
+
+# 🚀 Validation Step (Optional)
+if len(X_val) > 0:
+    # Scale validation data using the same scaler as training
+    X_val_scaled = scaler.transform(X_val)
+
+    # Predict on validation set
+    y_val_pred = model.predict(X_val_scaled)
+
+    # Print validation metrics
+    print("\n📊 Validation Set Evaluation:\n")
+    print(classification_report(y_val, y_val_pred, digits=4, target_names=["Non-Fraud", "Fraud"]))
+
+# --- Example: Manual hyperparameter tuning using validation set ---
+best_f1 = 0
+best_params = {}
+
+for max_depth in [3, 5, 7]:
+    for learning_rate in [0.05, 0.1, 0.2]:
+        # Adjust scale_pos_weight
+        scale_weight = sum(y_train == 0) / sum(y_train == 1)
+        model_tune = XGBClassifier(
+            scale_pos_weight=scale_weight,
+            max_depth=max_depth,
+            learning_rate=learning_rate,
+            random_state=42,
+        )
+        model_tune.fit(X_res_scaled, y_res)
+
+        # Validation predictions
+        y_val_pred = model_tune.predict(X_val_scaled)
+
+        # Evaluate F1-score for fraud class
+        from sklearn.metrics import f1_score
+        f1 = f1_score(y_val, y_val_pred, pos_label=1)
+
+        print(f"max_depth={max_depth}, lr={learning_rate}, F1={f1:.4f}")
+
+        if f1 > best_f1:
+            best_f1 = f1
+            best_params = {"max_depth": max_depth, "learning_rate": learning_rate}
+
+print(f"\n✅ Best validation F1 for fraud: {best_f1:.4f}")
+print(f"Best hyperparameters: {best_params}")
+# 🚀 Final Model Training on Training + Validation Set
+X_final = pd.concat([X_train, X_val])
+y_final = pd.concat([y_train, y_val])
+
+# Apply SMOTE again on combined set if enough frauds
+# fraud_count_final = sum(y_final == 1)
+# if fraud_count_final >= 2:
+#     k_final = min(5, fraud_count_final - 1)
+#     X_final_res, y_final_res = SMOTE(k_neighbors=k_final, random_state=42).fit_resample(X_final, y_final)
+# else:
+#     X_final_res, y_final_res = X_final, y_final
+
+# # Scale final training data
+# X_final_scaled = scaler.fit_transform(X_final_res)
+
+# Train final model with best hyperparameters
+# model = XGBClassifier(
+#     scale_pos_weight=sum(y_final_res == 0) / sum(y_final_res == 1),
+#     max_depth=best_params["max_depth"],
+#     learning_rate=best_params["learning_rate"],
+#     random_state=42
+# )
+# model.fit(X_final_scaled, y_final_res)
+
+# print("✅ Final model trained on training + validation set with tuned hyperparameters.")
+
+# 🚀 Validation Step (Optional)
+if len(X_val) > 0:
+    # Scale validation data using the same scaler as training
+    X_val_scaled = scaler.transform(X_val)
+
+    # Predict on validation set
+    y_val_pred = model.predict(X_val_scaled)
+
+    # Print validation metrics
+    print("\n📊 Validation Set Evaluation:\n")
+    print(classification_report(y_val, y_val_pred, digits=4, target_names=["Non-Fraud", "Fraud"]))
 
 # Drift Detector
 adwin = ADWIN(delta=0.0005)
@@ -182,7 +273,7 @@ def retrain_model(X_recent, y_recent):
 
         new_scaler = StandardScaler()
         X_scaled = new_scaler.fit_transform(X_resampled)
-        scale_weight = fraud_count / (len(y_resampled) - fraud_count)
+        scale_weight = (len(y_resampled) - fraud_count) / fraud_count
         new_model = XGBClassifier(scale_pos_weight=scale_weight, random_state=42)
         new_model.fit(X_scaled, y_resampled)
 
