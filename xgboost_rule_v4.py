@@ -330,7 +330,16 @@ def retrain_model(X_recent, y_recent):
                                 "threshold": thr,
                                 "model": model_try,
                             }
+        from sklearn.metrics import precision_recall_curve
 
+        y_val_proba = model.predict_proba(X_val_scaled)[:,1]
+        precisions, recalls, thresholds = precision_recall_curve(y_val, y_val_proba)
+
+        # Example: pick threshold that maximizes F1
+        f1_scores = 2 * (precisions * recalls) / (precisions + recalls + 1e-8)
+        best_idx = np.argmax(f1_scores)
+        best_thresh = thresholds[best_idx]
+        print(f"Best threshold = {best_thresh:.4f}, F1 = {f1_scores[best_idx]:.4f}")
         # ✅ Final chosen model + threshold
         new_model = best_params["model"]
         best_threshold = best_params["threshold"]
