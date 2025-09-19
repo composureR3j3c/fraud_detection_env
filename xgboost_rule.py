@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import time
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
+import datetime
+from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 from sklearn.tree import DecisionTreeClassifier, export_text
@@ -13,6 +13,9 @@ import warnings
 
 # Suppress the warning
 warnings.filterwarnings("ignore", message=".*fitted without feature names.*")
+# This will store all mined rules over time
+all_mined_rules = []
+
 
 # Function: Mine rules from misclassified instances
 def mine_rules_from_misclassified(X_recent, y_true, y_pred, feature_names, max_depth=2):
@@ -28,6 +31,8 @@ def mine_rules_from_misclassified(X_recent, y_true, y_pred, feature_names, max_d
     rules_text = export_text(clf, feature_names=feature_names.tolist())
     return rules_text, clf
 
+
+print(f"start time={datetime.datetime.now()}")
 # Load data
 df = pd.read_csv("creditcard.csv")
 df = df.sort_values(by="Time").reset_index(drop=True)
@@ -42,19 +47,20 @@ X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 
 # SMOTE
-fraud_count = sum(y_train == 1)
-if fraud_count >= 2:
-    k = min(5, fraud_count - 1)
-    X_res, y_res = SMOTE(k_neighbors=k, random_state=42).fit_resample(X_train, y_train)
-    print(f"✅ SMOTE applied (k={k}) | Fraud count = {fraud_count}")
-else:
-    X_res, y_res = X_train, y_train
-    print("⚠️ Not enough frauds for SMOTE")
+# fraud_count = sum(y_train == 1)
+# if fraud_count >= 2:
+#     k = min(5, fraud_count - 1)
+#     X_res, y_res = SMOTE(k_neighbors=k, random_state=42).fit_resample(X_train, y_train)
+#     print(f"✅ SMOTE applied (k={k}) | Fraud count = {fraud_count}")
+# else:
+#     X_res, y_res = X_train, y_train
+#     print("⚠️ Not enough frauds for SMOTE")
 
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
 
-model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight="balanced")
+# Using XGBoost with class weighting
+model = XGBClassifier(scale_pos_weight=fraud_count / (len(y_train) - fraud_count), random_state=42)
 model.fit(X_res_scaled, y_res)
 
 adwin = ADWIN(delta=0.0005)
@@ -87,21 +93,35 @@ retraining_complete = True
 
 print("\n🚀 Starting Stream Prediction...\n")
 
-def retrain_model_async(X_recent, y_recent):
+# Function to retrain XGBoost model
+def retrain_xgboost_model(X_recent, y_recent):
     global model, scaler, retraining_complete, in_rule_mode, rule_model, rule_model_text
     try:
-        k_local = min(5, sum(y_recent == 1) - 1)
+        fraud_count = sum(y_recent == 1)
+        if fraud_count < 2:
+            print(f"⚠️ Not enough fraud cases to apply SMOTE (fraud_count={fraud_count}). Skipping retraining.")
+            return
+
+        k_local = min(5, fraud_count - 1)
+        print(f"✅ Applying SMOTE (k={k_local}) | Fraud count = {fraud_count}")
         X_resampled, y_resampled = SMOTE(k_neighbors=k_local, random_state=42).fit_resample(X_recent, y_recent)
+
         new_scaler = StandardScaler()
         X_scaled = new_scaler.fit_transform(X_resampled)
 
-        new_model = LogisticRegression(max_iter=200, class_weight="balanced")
+        scale_weight = fraud_count / (len(y_resampled) - fraud_count)
+        new_model = XGBClassifier(scale_pos_weight=scale_weight, random_state=42)
         new_model.fit(X_scaled, y_resampled)
 
         # Rule mining from misclassified samples
         y_pred_temp = new_model.predict(X_scaled)
-        rules, rule_clf = mine_rules_from_misclassified(pd.DataFrame(X_resampled, columns=feature_names), y_resampled, y_pred_temp, feature_names)
-        
+        rules, rule_clf = mine_rules_from_misclassified(
+            pd.DataFrame(X_resampled, columns=feature_names),
+            y_resampled,
+            y_pred_temp,
+            feature_names
+        )
+
         with retrain_lock:
             model = new_model
             scaler = new_scaler
@@ -109,11 +129,14 @@ def retrain_model_async(X_recent, y_recent):
             rule_model_text = rules or ""
             retraining_complete = True
             in_rule_mode = False
+
         print("✅ Retraining complete. Switched back to model-based mode.")
         if rule_model_text:
             print("🧠 Mined Rules:\n", rule_model_text)
+
     except Exception as e:
         print("❌ Retraining failed:", e)
+
 
 for i in range(train_chunks, train_chunks + predict_chunks):
     X_chunk = X.iloc[i*chunk_size:(i+1)*chunk_size]
@@ -153,7 +176,7 @@ for i in range(train_chunks, train_chunks + predict_chunks):
             # Start retraining asynchronously
             buffer_df = pd.DataFrame(buffer_X, columns=feature_names)
             buffer_y_series = pd.Series(buffer_y)
-            thread = threading.Thread(target=retrain_model_async, args=(buffer_df, buffer_y_series))
+            thread = threading.Thread(target=retrain_xgboost_model, args=(buffer_df, buffer_y_series))
             thread.start()
 
         if in_rule_mode:
@@ -183,7 +206,6 @@ for i in range(train_chunks, train_chunks + predict_chunks):
 # Results
 print("\n📊 Final Evaluation:\n")
 print(classification_report(y_true_all, y_pred_all, digits=4, target_names=["Non-Fraud", "Fraud"]))
-
 print(f"📍 Drift points detected at rows: {drift_points}")
 print(f"✅ Overall accuracy: {np.mean(np.array(y_true_all) == np.array(y_pred_all)):.4f}")
 print(f"\n⏱ Avg Inference Latency: {np.mean(latencies):.6f} seconds")
@@ -192,12 +214,14 @@ print(f"⏱ Min Inference Latency: {np.min(latencies):.6f} seconds")
 
 print("\n🧾 Rule-based Report:")
 if y_pred_rule:
-    print(classification_report(y_true_rule, y_pred_rule, digits=4))
+    # print(f" {y_true_rule, y_pred_rule}")
+    print(classification_report(y_true_rule, y_pred_rule, digits=4, target_names=["Non-Fraud", "Fraud"]))
 else:
     print("No rule-based predictions.")
 
 print("\n🤖 Model-based Report:")
 if y_pred_model:
-    print(classification_report(y_true_model, y_pred_model, digits=4))
+    print(classification_report(y_true_model, y_pred_model, digits=4, target_names=["Non-Fraud", "Fraud"]))
 else:
     print("No model-based predictions.")
+print(f"end time={datetime.datetime.now()}")

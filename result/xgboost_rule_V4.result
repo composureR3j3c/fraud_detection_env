@@ -1,0 +1,224 @@
+Start time=2025-04-29 15:48:01.432052
+✅ SMOTE applied (k=5) | Fraud count = 94
+
+🚀 Starting Stream Prediction...
+
+
+⚠️ Drift detected at row 30314 | Switching to rule-based mode.
+⚠️ Not enough fraud cases to retrain (fraud_count=1). Skipping.
+
+⚠️ Drift detected at row 34555 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 9
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 35127 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 9
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 36154 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 9
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 36997 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 9
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 37532 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 9
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 38433 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 9
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 39032 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 9
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 39769 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 10
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 40693 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 12
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 41396 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 12
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 41938 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 14
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 42473 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 17
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 43060 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 35
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 43680 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 40
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 44220 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 44
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 46841 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 49
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 50288 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 55
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 54019 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 61
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+⚠️ Drift detected at row 58464 | Switching to rule-based mode.
+✅ SMOTE during retraining (k=5) | Fraud count = 67
+🧠 6 simple rules mined.
+🧠 0 combo rules mined.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 New rules mined.
+
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9995    0.9995    0.9995     29931
+       Fraud     0.7714    0.7826    0.7770        69
+
+    accuracy                         0.9990     30000
+   macro avg     0.8855    0.8910    0.8882     30000
+weighted avg     0.9990    0.9990    0.9990     30000
+
+📍 Drift points detected at rows: [30314, 34555, 35127, 36154, 36997, 37532, 38433, 39032, 39769, 40693, 41396, 41938, 42473, 43060, 43680, 44220, 46841, 50288, 54019, 58464]
+✅ Overall accuracy: 0.9990
+
+⏱ Avg Inference Latency: 0.002617 seconds
+⏱ Max Inference Latency: 0.246706 seconds
+⏱ Min Inference Latency: 0.002207 seconds
+
+🧾 Rule-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9996    0.9986    0.9991      9206
+       Fraud     0.7045    0.8857    0.7848        35
+
+    accuracy                         0.9982      9241
+   macro avg     0.8521    0.9422    0.8919      9241
+weighted avg     0.9984    0.9982    0.9983      9241
+
+
+🤖 Model-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9995    0.9999    0.9997     20725
+       Fraud     0.8846    0.6765    0.7667        34
+
+    accuracy                         0.9993     20759
+   macro avg     0.9420    0.8382    0.8832     20759
+weighted avg     0.9993    0.9993    0.9993     20759
+
+End time=2025-04-29 15:50:03.630152
+
+
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9994    0.9998    0.9996     49898
+       Fraud     0.8706    0.7255    0.7914       102
+
+    accuracy                         0.9992     50000
+   macro avg     0.9350    0.8626    0.8955     50000
+weighted avg     0.9992    0.9992    0.9992     50000
+
+📍 Drift points detected at rows: [39375, 42549, 43060, 44270, 54019, 63636, 76609]
+✅ Overall accuracy: 0.9992
+
+⏱ Avg Inference Latency: 0.002442 seconds
+⏱ Max Inference Latency: 0.394694 seconds
+⏱ Min Inference Latency: 0.002119 seconds
+
+🧾 Rule-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     1.0000    0.9982    0.9991      2218
+       Fraud     0.8182    1.0000    0.9000        18
+
+    accuracy                         0.9982      2236
+   macro avg     0.9091    0.9991    0.9495      2236
+weighted avg     0.9985    0.9982    0.9983      2236
+
+
+🤖 Model-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9994    0.9999    0.9996     47680
+       Fraud     0.8889    0.6667    0.7619        84
+
+    accuracy                         0.9993     47764
+   macro avg     0.9442    0.8333    0.8808     47764
+weighted avg     0.9992    0.9993    0.9992     47764
+
+End time=2025-04-30 08:41:19.876086

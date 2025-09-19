@@ -11,7 +11,6 @@ from river.drift import ADWIN
 import threading
 import warnings
 
-# Suppress the warning
 warnings.filterwarnings("ignore", message=".*fitted without feature names.*")
 
 # Function: Mine rules from misclassified instances
@@ -46,10 +45,10 @@ fraud_count = sum(y_train == 1)
 if fraud_count >= 2:
     k = min(5, fraud_count - 1)
     X_res, y_res = SMOTE(k_neighbors=k, random_state=42).fit_resample(X_train, y_train)
-    print(f"✅ SMOTE applied (k={k}) | Fraud count = {fraud_count}")
+    print(f" SMOTE applied (k={k}) | Fraud count = {fraud_count}")
 else:
     X_res, y_res = X_train, y_train
-    print("⚠️ Not enough frauds for SMOTE")
+    print(" Not enough frauds for SMOTE")
 
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
@@ -85,7 +84,6 @@ retrain_lock = threading.Lock()
 in_rule_mode = False
 retraining_complete = True
 
-print("\n🚀 Starting Stream Prediction...\n")
 
 def retrain_model_async(X_recent, y_recent):
     global model, scaler, retraining_complete, in_rule_mode, rule_model, rule_model_text
@@ -98,7 +96,6 @@ def retrain_model_async(X_recent, y_recent):
         new_model = LogisticRegression(max_iter=200, class_weight="balanced")
         new_model.fit(X_scaled, y_resampled)
 
-        # Rule mining from misclassified samples
         y_pred_temp = new_model.predict(X_scaled)
         rules, rule_clf = mine_rules_from_misclassified(pd.DataFrame(X_resampled, columns=feature_names), y_resampled, y_pred_temp, feature_names)
         
@@ -109,11 +106,11 @@ def retrain_model_async(X_recent, y_recent):
             rule_model_text = rules or ""
             retraining_complete = True
             in_rule_mode = False
-        print("✅ Retraining complete. Switched back to model-based mode.")
+        print(" Retraining complete. Switched back to model-based mode.")
         if rule_model_text:
-            print("🧠 Mined Rules:\n", rule_model_text)
+            print(" Mined Rules:\n", rule_model_text)
     except Exception as e:
-        print("❌ Retraining failed:", e)
+        print(" Retraining failed:", e)
 
 for i in range(train_chunks, train_chunks + predict_chunks):
     X_chunk = X.iloc[i*chunk_size:(i+1)*chunk_size]
@@ -144,7 +141,7 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         prev_row_vals = current_vals
 
         if (drift or feature_drift) and (idx - last_drift_row >= cooldown_period):
-            print(f"\n⚠️ Drift detected at row {idx} | Switching to rule-based mode.")
+            print(f"Drift detected at row {idx} | Switching to rule-based mode.")
             drift_points.append(idx)
             last_drift_row = idx
             in_rule_mode = True
@@ -181,22 +178,22 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         latencies.append(latency)
 
 # Results
-print("\n📊 Final Evaluation:\n")
+print("\n Final Evaluation:\n")
 print(classification_report(y_true_all, y_pred_all, digits=4, target_names=["Non-Fraud", "Fraud"]))
 
-print(f"📍 Drift points detected at rows: {drift_points}")
-print(f"✅ Overall accuracy: {np.mean(np.array(y_true_all) == np.array(y_pred_all)):.4f}")
-print(f"\n⏱ Avg Inference Latency: {np.mean(latencies):.6f} seconds")
-print(f"⏱ Max Inference Latency: {np.max(latencies):.6f} seconds")
-print(f"⏱ Min Inference Latency: {np.min(latencies):.6f} seconds")
+print(f" Drift points detected at rows: {drift_points}")
+print(f" Overall accuracy: {np.mean(np.array(y_true_all) == np.array(y_pred_all)):.4f}")
+print(f"\n Avg Inference Latency: {np.mean(latencies):.6f} seconds")
+print(f" Max Inference Latency: {np.max(latencies):.6f} seconds")
+print(f" Min Inference Latency: {np.min(latencies):.6f} seconds")
 
-print("\n🧾 Rule-based Report:")
+print("\n Rule-based Report:")
 if y_pred_rule:
     print(classification_report(y_true_rule, y_pred_rule, digits=4))
 else:
     print("No rule-based predictions.")
 
-print("\n🤖 Model-based Report:")
+print("\n Model-based Report:")
 if y_pred_model:
     print(classification_report(y_true_model, y_pred_model, digits=4))
 else:

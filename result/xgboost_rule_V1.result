@@ -1,0 +1,142 @@
+start time=2025-04-25 15:25:40.521977
+✅ SMOTE applied (k=5) | Fraud count = 94
+
+🚀 Starting Stream Prediction...
+
+
+⚠️ Drift detected at row 30314 | Switching to rule-based mode.
+❌ Retraining failed: The 'k_neighbors' parameter of SMOTE must be an int in the range [1, inf) or an object implementing 'kneighbors' and 'kneighbors_graph'. Got 0 instead.
+
+⚠️ Drift detected at row 34555 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+
+⚠️ Drift detected at row 35127 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+
+⚠️ Drift detected at row 36154 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+
+⚠️ Drift detected at row 36997 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+
+⚠️ Drift detected at row 37532 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+
+⚠️ Drift detected at row 38433 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+
+⚠️ Drift detected at row 39032 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+
+⚠️ Drift detected at row 39769 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 40693 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 41396 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 41938 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 42473 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 43060 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 43680 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 44220 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 46841 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 50288 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 54019 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+⚠️ Drift detected at row 58464 | Switching to rule-based mode.
+✅ Retraining complete. Switched back to model-based mode.
+🧠 Mined Rules:
+ |--- class: 0
+
+
+📊 Final Evaluation:
+
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9993    0.9692    0.9840     29931
+       Fraud     0.0495    0.6957    0.0925        69
+
+    accuracy                         0.9686     30000
+   macro avg     0.5244    0.8324    0.5383     30000
+weighted avg     0.9971    0.9686    0.9820     30000
+
+📍 Drift points detected at rows: [30314, 34555, 35127, 36154, 36997, 37532, 38433, 39032, 39769, 40693, 41396, 41938, 42473, 43060, 43680, 44220, 46841, 50288, 54019, 58464]
+✅ Overall accuracy: 0.9686
+
+⏱ Avg Inference Latency: 0.002613 seconds
+⏱ Max Inference Latency: 0.249836 seconds
+⏱ Min Inference Latency: 0.002144 seconds
+
+🧾 Rule-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9984    0.8414    0.9132      5777
+       Fraud     0.0129    0.6000    0.0253        20
+
+    accuracy                         0.8406      5797
+   macro avg     0.5056    0.7207    0.4693      5797
+weighted avg     0.9950    0.8406    0.9101      5797
+
+
+🤖 Model-based Report:
+              precision    recall  f1-score   support
+
+   Non-Fraud     0.9995    0.9998    0.9996     24154
+       Fraud     0.8780    0.7347    0.8000        49
+
+    accuracy                         0.9993     24203
+   macro avg     0.9388    0.8672    0.8998     24203
+weighted avg     0.9992    0.9993    0.9992     24203
+
+end time=2025-04-25 15:27:42.896999
