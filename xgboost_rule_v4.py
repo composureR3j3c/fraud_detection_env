@@ -396,12 +396,12 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         precisions, recalls, thresholds = precision_recall_curve(y_val, y_val_proba)
 
         # Example: pick threshold that maximizes F1
-        f1_scores = 2 * (precisions * recalls) / (precisions + recalls + 1e-8)
-        best_idx = np.argmax(f1_scores)
-        best_thresh = thresholds[best_idx]
-        print(f"Best threshold = {best_thresh:.4f}, F1 = {f1_scores[best_idx]:.4f}")
+        # f1_scores = 2 * (precisions * recalls) / (precisions + recalls + 1e-8)
+        # best_idx = np.argmax(f1_scores)
+        # best_thresh = thresholds[best_idx]
+        # print(f"Best threshold = {best_thresh:.4f}, F1 = {f1_scores[best_idx]:.4f}")
         y_pred_prob = model.predict_proba(row_scaled)[0][1]
-        model_pred = int(y_pred_prob > best_thresh)
+        model_pred = int(y_pred_prob > 0.7)
 
         error = int(model_pred != true_label)
 
