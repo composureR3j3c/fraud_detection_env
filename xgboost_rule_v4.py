@@ -9,7 +9,6 @@ from sklearn.metrics import classification_report
 from imblearn.over_sampling import SMOTE
 from river.drift import ADWIN
 from itertools import combinations
-from sklearn.metrics import precision_recall_curve
 import warnings
 
 warnings.filterwarnings("ignore", message=".*fitted without feature names.*")
@@ -49,7 +48,7 @@ else:
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
 model = XGBClassifier(
-   scale_pos_weight=np.sqrt((len(y_train) - fraud_count) / fraud_count), 
+    scale_pos_weight=(len(y_train) - fraud_count) / fraud_count, 
     random_state=42)
 model.fit(X_res_scaled, y_res)
 
@@ -336,6 +335,7 @@ def retrain_model(X_recent, y_recent):
         new_model = best_params["model"]
         best_threshold = best_params["threshold"]
 
+
         with retrain_lock:
             model = new_model
             scaler = new_scaler
@@ -389,6 +389,7 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         start_time = time.time()
 
         # Model prediction
+<<<<<<< HEAD
         # Model prediction with tuned threshold
         
 
@@ -403,6 +404,10 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         y_pred_prob = model.predict_proba(row_scaled)[0][1]
         model_pred = int(y_pred_prob > 0.7)
 
+=======
+        y_pred_prob = model.predict_proba(row_scaled)[0][1]
+        model_pred = int(y_pred_prob > 0.5)
+>>>>>>> 01ac66f06a5eb7102c84ff3d98157cf0f2e4f492
         error = int(model_pred != true_label)
 
         # ADWIN-based drift detection
