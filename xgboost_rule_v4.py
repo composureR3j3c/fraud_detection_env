@@ -25,7 +25,11 @@ chunk_size = 1000
 train_chunks = 30
 val_chunks = 10   
 predict_chunks = 50
+<<<<<<< HEAD
 # predict_chunks = 245
+=======
+# predict_chunks = 255
+>>>>>>> eae5dcfde77ce70d149db3970b5e9287036b9120
 X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 
@@ -66,56 +70,36 @@ if len(X_val) > 0:
     print(classification_report(y_val, y_val_pred, digits=4, target_names=["Non-Fraud", "Fraud"]))
 
 # --- Example: Manual hyperparameter tuning using validation set ---
-from sklearn.metrics import precision_score, recall_score, f1_score
-
 best_f1 = 0
 best_params = {}
 
-# Candidate values
-max_depths = [3, 5, 7]
-learning_rates = [0.05, 0.1, 0.2]
-thresholds = [0.3, 0.4, 0.5]
-base_ratio = sum(y_res == 0) / sum(y_res == 1)
-scale_pos_weights = [0.5*base_ratio, base_ratio, 2*base_ratio]
+for max_depth in [3, 5, 7]:
+    for learning_rate in [0.05, 0.1, 0.2]:
+        # Adjust scale_pos_weight
+        scale_weight = sum(y_train == 0) / sum(y_train == 1)
+        model_tune = XGBClassifier(
+            scale_pos_weight=scale_weight,
+            max_depth=max_depth,
+            learning_rate=learning_rate,
+            random_state=42,
+        )
+        model_tune.fit(X_res_scaled, y_res)
 
-for max_depth in max_depths:
-    for lr in learning_rates:
-        for spw in scale_pos_weights:
-            model_tune = XGBClassifier(
-                scale_pos_weight=spw,
-                max_depth=max_depth,
-                learning_rate=lr,
-                random_state=42,
-            )
-            model_tune.fit(X_res_scaled, y_res)
+        # Validation predictions
+        y_val_pred = model_tune.predict(X_val_scaled)
 
-            # Predict probabilities on validation
-            y_val_proba = model_tune.predict_proba(X_val_scaled)[:, 1]
+        # Evaluate F1-score for fraud class
+        from sklearn.metrics import f1_score
+        f1 = f1_score(y_val, y_val_pred, pos_label=1)
 
-            for thr in thresholds:
-                y_val_pred = (y_val_proba > thr).astype(int)
+        print(f"max_depth={max_depth}, lr={learning_rate}, F1={f1:.4f}")
 
-                prec = precision_score(y_val, y_val_pred, pos_label=1, zero_division=0)
-                rec = recall_score(y_val, y_val_pred, pos_label=1, zero_division=0)
-                f1 = f1_score(y_val, y_val_pred, pos_label=1, zero_division=0)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_params = {"max_depth": max_depth, "learning_rate": learning_rate}
 
-                print(f"depth={max_depth}, lr={lr}, spw={spw:.2f}, thr={thr}, "
-                      f"Precision={prec:.3f}, Recall={rec:.3f}, F1={f1:.3f}")
-
-                if f1 > best_f1:
-                    best_f1 = f1
-                    best_params = {
-                        "max_depth": max_depth,
-                        "learning_rate": lr,
-                        "scale_pos_weight": spw,
-                        "threshold": thr,
-                        "precision": prec,
-                        "recall": rec
-                    }
-
-print("\n✅ Best config:")
-print(best_params)
-
+print(f"\n✅ Best validation F1 for fraud: {best_f1:.4f}")
+print(f"Best hyperparameters: {best_params}")
 # 🚀 Final Model Training on Training + Validation Set
 X_final = pd.concat([X_train, X_val])
 y_final = pd.concat([y_train, y_val])
@@ -294,6 +278,7 @@ def retrain_model(X_recent, y_recent):
         new_scaler = StandardScaler()
         X_scaled = new_scaler.fit_transform(X_resampled)
         scale_weight = (len(y_resampled) - fraud_count) / fraud_count
+<<<<<<< HEAD
         # new_model = XGBClassifier(scale_pos_weight=scale_weight, random_state=42)
         # new_model.fit(X_scaled, y_resampled)
         # --- Validation split inside retrain ---
@@ -334,6 +319,10 @@ def retrain_model(X_recent, y_recent):
         # ✅ Final chosen model + threshold
         new_model = best_params["model"]
         best_threshold = best_params["threshold"]
+=======
+        new_model = XGBClassifier(scale_pos_weight=scale_weight, random_state=42)
+        new_model.fit(X_scaled, y_resampled)
+>>>>>>> eae5dcfde77ce70d149db3970b5e9287036b9120
 
         with retrain_lock:
             model = new_model
@@ -390,8 +379,12 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         # Model prediction
         # Model prediction with tuned threshold
         y_pred_prob = model.predict_proba(row_scaled)[0][1]
+<<<<<<< HEAD
         model_pred = int(y_pred_prob > best_thresh)
 
+=======
+        model_pred = int(y_pred_prob > 0.7)
+>>>>>>> eae5dcfde77ce70d149db3970b5e9287036b9120
         error = int(model_pred != true_label)
 
         # ADWIN-based drift detection
