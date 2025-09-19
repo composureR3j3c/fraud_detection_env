@@ -48,7 +48,7 @@ else:
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
 model = XGBClassifier(
-    scale_pos_weight=(len(y_train) - fraud_count) / fraud_count, 
+   scale_pos_weight=np.sqrt((len(y_train) - fraud_count) / fraud_count), 
     random_state=42)
 model.fit(X_res_scaled, y_res)
 
@@ -388,8 +388,10 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         start_time = time.time()
 
         # Model prediction
+        # Model prediction with tuned threshold
         y_pred_prob = model.predict_proba(row_scaled)[0][1]
-        model_pred = int(y_pred_prob > 0.5)
+        model_pred = int(y_pred_prob > best_thresh)
+
         error = int(model_pred != true_label)
 
         # ADWIN-based drift detection
