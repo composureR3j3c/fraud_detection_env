@@ -24,12 +24,8 @@ y = df["Class"]
 chunk_size = 1000
 train_chunks = 30
 val_chunks = 10   
-predict_chunks = 50
-<<<<<<< HEAD
-# predict_chunks = 245
-=======
+predict_chunks = 10
 # predict_chunks = 255
->>>>>>> eae5dcfde77ce70d149db3970b5e9287036b9120
 X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 
@@ -52,8 +48,10 @@ else:
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
 model = XGBClassifier(
-   scale_pos_weight=np.sqrt((len(y_train) - fraud_count) / fraud_count), 
-    random_state=42)
+   scale_pos_weight= (len(y_train) - fraud_count) / fraud_count, random_state=42)
+#    np.sqrt((len(y_train) - fraud_count) / fraud_count),  
+
+
 model.fit(X_res_scaled, y_res)
 
 
@@ -278,51 +276,8 @@ def retrain_model(X_recent, y_recent):
         new_scaler = StandardScaler()
         X_scaled = new_scaler.fit_transform(X_resampled)
         scale_weight = (len(y_resampled) - fraud_count) / fraud_count
-<<<<<<< HEAD
-        # new_model = XGBClassifier(scale_pos_weight=scale_weight, random_state=42)
-        # new_model.fit(X_scaled, y_resampled)
-        # --- Validation split inside retrain ---
-        split_idx = int(0.8 * len(X_scaled))
-        X_train_split, X_val_split = X_scaled[:split_idx], X_scaled[split_idx:]
-        y_train_split, y_val_split = y_resampled[:split_idx], y_resampled[split_idx:]
-
-        best_f1 = 0
-        best_params = {}
-        base_ratio = sum(y_train_split == 0) / sum(y_train_split == 1)
-
-        for max_depth in [3, 5, 7]:
-            for lr in [0.05, 0.1, 0.2]:
-                for spw in [0.5*base_ratio, base_ratio, 2*base_ratio]:
-                    model_try = XGBClassifier(
-                        scale_pos_weight=spw,
-                        max_depth=max_depth,
-                        learning_rate=lr,
-                        random_state=42,
-                    )
-                    model_try.fit(X_train_split, y_train_split)
-                    y_val_proba = model_try.predict_proba(X_val_split)[:, 1]
-
-                    for thr in [0.3, 0.4, 0.5]:
-                        y_val_pred = (y_val_proba > thr).astype(int)
-
-                        f1 = f1_score(y_val_split, y_val_pred, pos_label=1, zero_division=0)
-                        if f1 > best_f1:
-                            best_f1 = f1
-                            best_params = {
-                                "max_depth": max_depth,
-                                "learning_rate": lr,
-                                "scale_pos_weight": spw,
-                                "threshold": thr,
-                                "model": model_try,
-                            }
-
-        # ✅ Final chosen model + threshold
-        new_model = best_params["model"]
-        best_threshold = best_params["threshold"]
-=======
         new_model = XGBClassifier(scale_pos_weight=scale_weight, random_state=42)
         new_model.fit(X_scaled, y_resampled)
->>>>>>> eae5dcfde77ce70d149db3970b5e9287036b9120
 
         with retrain_lock:
             model = new_model
@@ -379,12 +334,7 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         # Model prediction
         # Model prediction with tuned threshold
         y_pred_prob = model.predict_proba(row_scaled)[0][1]
-<<<<<<< HEAD
-        model_pred = int(y_pred_prob > best_thresh)
-
-=======
         model_pred = int(y_pred_prob > 0.7)
->>>>>>> eae5dcfde77ce70d149db3970b5e9287036b9120
         error = int(model_pred != true_label)
 
         # ADWIN-based drift detection
@@ -411,7 +361,7 @@ for i in range(train_chunks, train_chunks + predict_chunks):
 
         # Conditional retraining trigger
         if (drift or feature_drift) and (idx - last_drift_row >= cooldown_period):
-            if fraud_count_in_buffer >= 10:
+            if fraud_count_in_buffer >= 5:
                 print(f"\n⚠️ Drift detected at row {idx} | Switching to rule-based mode and retraining.")
                 drift_points.append(idx)
                 last_drift_row = idx

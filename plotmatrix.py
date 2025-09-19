@@ -1,37 +1,36 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 
-# |                      | Predicted Fraud | Predicted Non-Fraud |
-# | -------------------- | --------------- | ------------------- |
-# | **Actual Fraud**     | 317 (TP)        | 73 (FN)             |
-# | **Actual Non-Fraud** | 214 (FP)        | 244,396 (TN)        |
-
-
-# Confusion matrix values
-cm = np.array([[317, 73],
-               [214, 244396]])
-
-# Labels
+# Confusion matrix counts
+cm = np.array([[303, 95],
+               [41, 254368]])
 labels = ["Fraud", "Non-Fraud"]
 
-# Row-normalize (so each row sums to 1)
-cm_row = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
+# Row-normalized (recall per class)
+cm_row = cm.astype(float) / cm.sum(axis=1)[:, np.newaxis]
 
-# Build annotation strings: counts + row percentage
+# Column-normalized (precision per predicted class)
+cm_col = cm.astype(float) / cm.sum(axis=0)[np.newaxis, :]
+
+# Build annotation strings with counts, row%, column%
 annot = np.empty_like(cm).astype(str)
 for i in range(cm.shape[0]):
     for j in range(cm.shape[1]):
         count = cm[i, j]
-        perc = cm_row[i, j] * 100
-        annot[i, j] = f"{count:,}\n({perc:.2f}%)"
+        row_perc = cm_row[i, j] * 100
+        col_perc = cm_col[i, j] * 100
+        annot[i, j] =        f"{count:,}"
+        # \n(R:{row_perc:.1f}%, P:{col_perc:.1f}%)"
 
-# Plot heatmap
-plt.figure(figsize=(6, 5))
+
+# Plot heatmap (row-normalized for color intensity so fraud cells are visible)
+plt.figure(figsize=(7, 5))
 sns.heatmap(cm_row, annot=annot, fmt="", cmap="Blues",
-            xticklabels=labels, yticklabels=labels, cbar_kws={'label': 'Proportion per Class'})
+            xticklabels=labels, yticklabels=labels,
+            cbar_kws={'label': 'Recall per Class'})
 
 plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
-plt.title("Confusion Matrix ( Counts and Percentages)")
+plt.title("Confusion Matrix with Counts, Recall & Precision")
 plt.show()
