@@ -23,7 +23,7 @@ y = df["Class"]
 
 chunk_size = 1000
 train_chunks = 30
-predict_chunks = 50
+predict_chunks = 250
 X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 
@@ -40,7 +40,7 @@ else:
 # 🚀 Model and Scaler Training
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
-model = XGBClassifier(scale_pos_weight=fraud_count / (len(y_train) - fraud_count), random_state=42)
+model = XGBClassifier(scale_pos_weight=fraud_count / (len(y_train) - fraud_count), random_state=42, eval_metric='logloss',)
 model.fit(X_res_scaled, y_res)
 
 # Drift Detector
@@ -312,6 +312,11 @@ for i in range(train_chunks, train_chunks + predict_chunks):
 
 # 🚀 Final Reports
 print("\n📊 Final Evaluation:\n")
+with open("predictions.txt", "w") as f:
+    for t, p in zip(y_true_all, y_pred_all):
+        f.write(f"{t},{p}\n")
+
+print("✅ Saved to predictions.txt")
 print(classification_report(y_true_all, y_pred_all, digits=4, target_names=["Non-Fraud", "Fraud"]))
 print(f"📍 Drift points detected at rows: {drift_points}")
 print(f"✅ Overall accuracy: {np.mean(np.array(y_true_all) == np.array(y_pred_all)):.4f}")
