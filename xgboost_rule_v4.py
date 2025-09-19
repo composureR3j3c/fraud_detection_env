@@ -24,7 +24,7 @@ y = df["Class"]
 chunk_size = 1000
 train_chunks = 30
 val_chunks = 10   
-predict_chunks = 10
+predict_chunks = 50
 # predict_chunks = 245
 X_train = pd.concat([X.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
 y_train = pd.concat([y.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(train_chunks)])
@@ -48,7 +48,7 @@ else:
 scaler = StandardScaler()
 X_res_scaled = scaler.fit_transform(X_res)
 model = XGBClassifier(
-    scale_pos_weight=(len(y_train) - fraud_count) / fraud_count, 
+   scale_pos_weight=np.sqrt((len(y_train) - fraud_count) / fraud_count), 
     random_state=42)
 model.fit(X_res_scaled, y_res)
 
@@ -335,7 +335,6 @@ def retrain_model(X_recent, y_recent):
         new_model = best_params["model"]
         best_threshold = best_params["threshold"]
 
-
         with retrain_lock:
             model = new_model
             scaler = new_scaler
@@ -389,25 +388,10 @@ for i in range(train_chunks, train_chunks + predict_chunks):
         start_time = time.time()
 
         # Model prediction
-<<<<<<< HEAD
         # Model prediction with tuned threshold
-        
-
-        y_val_proba = model.predict_proba(X_val_scaled)[:,1]
-        precisions, recalls, thresholds = precision_recall_curve(y_val, y_val_proba)
-
-        # Example: pick threshold that maximizes F1
-        # f1_scores = 2 * (precisions * recalls) / (precisions + recalls + 1e-8)
-        # best_idx = np.argmax(f1_scores)
-        # best_thresh = thresholds[best_idx]
-        # print(f"Best threshold = {best_thresh:.4f}, F1 = {f1_scores[best_idx]:.4f}")
         y_pred_prob = model.predict_proba(row_scaled)[0][1]
-        model_pred = int(y_pred_prob > 0.7)
+        model_pred = int(y_pred_prob > best_thresh)
 
-=======
-        y_pred_prob = model.predict_proba(row_scaled)[0][1]
-        model_pred = int(y_pred_prob > 0.5)
->>>>>>> 01ac66f06a5eb7102c84ff3d98157cf0f2e4f492
         error = int(model_pred != true_label)
 
         # ADWIN-based drift detection
