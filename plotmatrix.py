@@ -12,6 +12,7 @@ plt.plot(epochs, train_loss, marker='o', label='Training Loss')
 plt.plot(epochs, val_loss, marker='s', label='Validation Loss')
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Confusion matrix values
 # cm = np.array([[47683, 12],
             #    [5, 57]])
@@ -40,11 +41,16 @@ plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
 plt.title("Confusion Matrix")
 =======
+=======
+>>>>>>> 60c99818763c8e33c1e177e3b009933790768a79
 plt.title("Loss Function over Epochs", fontsize=14)
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
 plt.ylim(0, max(max(train_loss), max(val_loss)) + 0.1)
 plt.legend()
 plt.grid(True)
+<<<<<<< HEAD
+>>>>>>> 60c99818763c8e33c1e177e3b009933790768a79
+=======
 >>>>>>> 60c99818763c8e33c1e177e3b009933790768a79
 plt.show()
