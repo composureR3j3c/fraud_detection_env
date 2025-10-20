@@ -9,9 +9,10 @@ import numpy as np
 
 
 # Confusion matrix values
-cm = np.array([[317, 73],
-               [214, 244396]])
-
+# cm = np.array([[47683, 12],
+            #    [5, 57]])
+cm = np.array([[57, 5],
+               [12, 47683]])
 # Labels
 labels = ["Fraud", "Non-Fraud"]
 
@@ -24,7 +25,7 @@ for i in range(cm.shape[0]):
     for j in range(cm.shape[1]):
         count = cm[i, j]
         perc = cm_row[i, j] * 100
-        annot[i, j] = f"{count:,}\n({perc:.2f}%)"
+        annot[i, j] = f"{count:,}"
 
 # Plot heatmap
 plt.figure(figsize=(6, 5))
@@ -33,5 +34,5 @@ sns.heatmap(cm_row, annot=annot, fmt="", cmap="Blues",
 
 plt.xlabel("Predicted Label")
 plt.ylabel("True Label")
-plt.title("Confusion Matrix ( Counts and Percentages)")
+plt.title("Confusion Matrix")
 plt.show()
